@@ -1,0 +1,47 @@
+---
+title: "Untitled"
+author: "Scott Bek"
+date: '2021 3 11 '
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(lubridate)
+library(skimr)
+library(tidyverse)
+```
+
+```{r}
+co_june_to_oct <- read_csv("data/air_quality/CO.csv")
+co_jan_to_may <- read_csv("data/air_quality/CO_20200101-20200531.csv")
+
+co <- co_jan_to_may %>% 
+  left_join(., co_june_to_oct)
+
+skim(co)
+
+
+co %>% 
+  mutate(answer = sum(startsWith(prefix = "CO_Mean_")))
+
+co %>% 
+  select(dplyr::starts_with("CO_Mean")) %>%
+  mutate(avg_co = map_doubles()
+
+# Solution for one city. Q: how to apply this to my entire dataset? 
+     
+co %>% 
+  filter(City_EN == "Beijing") %>% 
+  select(dplyr::starts_with("CO_Mean")) %>% 
+  mutate(avg_co = sum(.)/204) %>% 
+  select(avg_co)
+
+  
+
+co %>% 
+  long_panel(., prefix = "CO_Mean_", begin = 0601, label_location = "end")
+```
+
