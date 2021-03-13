@@ -9,8 +9,15 @@
 
 library(shiny)
 
+covid_death_plot <- readRDS("covid_death_plot.RDS")
+
 ui <- navbarPage(
-    "Final Project Milestone #3",
+    "Final Project Milestone #4",
+    tabPanel("Data",
+             titlePanel("Summary of Data"),
+             mainPanel(
+               plotOutput("distPlot")
+             )),
     tabPanel("Discussion",
              titlePanel("Data Sources"),
              p("I found two datasets in Harvard Dataverse that relate to my project topic: 1) Air Quality Data and 2) COVID-19 Data."),
@@ -20,11 +27,18 @@ ui <- navbarPage(
              a("China COVID-19 Data", href = "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/MR5IJN")),
     tabPanel("About", 
              titlePanel("About"),
+             p("For milestone #4, I loaded my two datasets into gather.RMD. Since the air quality data have each date of measure as seperate columns, 
+               I have to come up with a way to sum them up and divide it by the number of days to get the average air quality level over the studied period.
+               Meanwhile, for this milestone (#4), I tried to look at what the covid-19 data look like. I first merged the covid-19 confirmed data with the covid-19
+               death data, and then created another column called death_rate. Using geom_col, I decided to graph top 10 Chinese cities with highest covid-19 deah rate."),
              h3("Url"),
              a("Milestone #3", href = "https://github.com/scott9025/milestone3.git")))
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+  output$distPlot <- renderPlot({
+    covid_death_plot
+  })
 }
 
 # Run the application 

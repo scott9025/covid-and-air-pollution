@@ -1,39 +1,8 @@
----
-title: "Untitled"
-author: "Scott Bek"
-date: '2021 3 11 '
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-
 library(dplyr)
 library(lubridate)
 library(skimr)
 library(tidyverse)
-```
 
-```{r loading_CO}
-co_june_to_oct <- read_csv("data/air_quality/CO.csv")
-co_jan_to_may <- read_csv("data/air_quality/CO_20200101-20200531.csv")
-
-co <- co_jan_to_may %>% 
-  left_join(., co_june_to_oct)
-
-# Solution for one city. Q: how to apply this to my entire dataset? 
-     
-co %>% 
-  filter(City_EN == "Beijing") %>% 
-  select(dplyr::starts_with("CO_Mean")) %>% 
-  mutate(avg_co = sum(.)/356) %>% 
-  select(avg_co)
-
-co %>% 
-  select(City_EN, CO_Mean_1221) %>% 
-  summary()
-```
-```{r}
 covid_confirmed <- read_csv("data/covid19/City_Confirmed_20200115_20210114.csv")
 covid_death <- read_csv("data/covid19/City_Death_20200115_20210114.csv")
 
@@ -52,5 +21,5 @@ covid_death_plot <- covid %>%
   labs(title = "Top 10 Chinese Cities with Highest COVID-19 Death Rate",
        x = "Cities",
        y = "Death Rates")
-```
 
+saveRDS(covid_death_plot, "milestone3/covid_death_plot.RDS")
