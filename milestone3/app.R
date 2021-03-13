@@ -32,7 +32,8 @@ ui <- navbarPage(
                Meanwhile, for this milestone (#4), I tried to look at what the covid-19 data look like. I first merged the covid-19 confirmed data with the covid-19
                death data, and then created another column called death_rate. Using geom_col, I decided to graph top 10 Chinese cities with highest covid-19 deah rate."),
              h3("Url"),
-             a("Milestone #3", href = "https://github.com/scott9025/milestone3.git")))
+             a("Milestone #3", href = "https://github.com/scott9025/milestone3.git"),
+             p("Note that I'm using the previous repo for milestone #4")))
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
