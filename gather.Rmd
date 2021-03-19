@@ -29,6 +29,14 @@ co %>%
   mutate(avg_co = sum(.)/356) %>% 
   select(avg_co)
 
+# This worked!
+
+co %>% 
+  select(City_EN, starts_with("CO_Mean")) %>% 
+  rowwise() %>% 
+  mutate(avg_co = mean(c_across(CO_Mean_0101:CO_Mean_1221))) %>% 
+  select(City_EN, avg_co)
+
 co %>% 
   select(City_EN, CO_Mean_1221) %>% 
   summary()
