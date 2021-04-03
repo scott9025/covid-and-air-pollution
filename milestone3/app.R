@@ -12,7 +12,10 @@ library(dplyr)
 library(lubridate)
 library(skimr)
 library(tidyverse)
+library(rstanarm)
+library(xtable)
 
+source("make_model_death_so2.R")
 # source("make_covid_death_plot.R")
 
 covid_aq <- read_csv("clean/covid_aq.csv",
@@ -32,7 +35,7 @@ covid_aq <- read_csv("clean/covid_aq.csv",
                        ))
 
 ui <- navbarPage(
-    "Final Project Milestone #5",
+    "Final Project Milestone #6",
     tabPanel("Data",
              fluidPage(
                titlePanel("COVID-19 Death Rate Plot"),
@@ -49,6 +52,11 @@ ui <- navbarPage(
                  )
                )
              ),
+    tabPanel("Model",
+             titlePanel("Fitted Model: Death Rate on SO2"),
+             tableOutput("model"),
+             p("This model shows my posterior on the causal relationship between COVID-19 death rate and SO2 level in China. According to the model, when the average SO2 level is 0, the corresponding death rate is 0.78 percentage points. Since the standard deviation is 1.04, the 95% confidence interval for this value is between -0.26 and 1.82. Also, according to the model, on average, 1 mug/m^3 increase in SO2 increases the death rate by 0.29 percentage points. Given that the standard deviation is 0.1, the 95% confidence interval for this value is between 0.19 and 0.39.")
+             ),
     tabPanel("Discussion",
              titlePanel("Data Sources"),
              p("I found two datasets in Harvard Dataverse that relate to my project topic: 1) Air Quality Data and 2) COVID-19 Data."),
@@ -58,7 +66,7 @@ ui <- navbarPage(
              a("China COVID-19 Data", href = "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/MR5IJN")),
     tabPanel("About", 
              titlePanel("About"),
-             p("For milestone #5, I decided to graph top 10 Chinese cities with highest COVID-19 deah rate. I filled with total COVID-19 cases to see whether cities with many total cases also have high death rates. Looking at the graph, it does not seem like it."),
+             p("For milestone #6, I decided to make an interative graphs of top 10 Chinese cities/provinces with highest COVID-19 deah rate. I filled with total COVID-19 cases to see whether cities with many total cases also have high death rates. Looking at the graphs, it does not seem like it. Also, using stan_glm, I made a fitted model between COVID-19 death rate and SO2 level in China. See the Model panel for details."),
              h3("Url"),
              a("Milestone #3", href = "https://github.com/scott9025/milestone3.git"),
              p("Note that I'm using the previous repo for milestone #6")))
@@ -110,6 +118,13 @@ server <- function(input, output) {
       theme_classic()
    
     })
+  
+  output$model <- renderTable({
+    
+    summary_fit_so2
+    
+  })
+  
 }
 
 # Run the application 

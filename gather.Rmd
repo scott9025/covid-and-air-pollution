@@ -13,6 +13,7 @@ library(lubridate)
 library(skimr)
 library(tidyverse)
 library(rstanarm)
+library(xtable)
 ```
 
 ```{r data_cleaning}
@@ -374,7 +375,20 @@ covid_aq %>%
 
 
 ```{r regression_death_rate_vs_so2}
-stan_glm(data = covid_aq,
-         formula = death_rate ~ )
+
+# For the fitted model, I decided to remove all rows with death rate = 0, since
+# I wanted to focus on cities with at least one death case. Also, I multiplied
+# death rates by 100, since running stan_glm with regular death_rate returned
+# really small coefficients (marked 0.0 with the model only showing up to the
+# nearest 10th).
+
+covid_aq_no_zero <- covid_aq %>% 
+  filter(death_rate != 0) %>% 
+  mutate(death_rate_100 = death_rate * 100)
+
+stan_glm(data = covid_aq_no_zero,
+         formula = death_rate_100 ~ avg_so2, 
+         seed = 13,
+         refresh = 0)
 ```
 
