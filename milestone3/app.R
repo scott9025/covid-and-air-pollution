@@ -14,9 +14,11 @@ library(skimr)
 library(tidyverse)
 library(rstanarm)
 library(xtable)
+library(broom)
+library(gtsummary)
+library(gt)
 
 source("make_model_death_so2.R")
-# source("make_covid_death_plot.R")
 
 covid_aq <- read_csv("clean/covid_aq.csv",
                      col_types =

@@ -45,9 +45,6 @@ summary_fit_so2 <- summary(fit_so2) %>%
   as.data.frame() %>% 
   rownames_to_column() %>% 
   gt()
-  
-
-
 
 # From Stack Overflow: If you call launch_shinystan on the object and go to the
 # Estimate tab, there is a link to Generate LaTeX table that gives you a bunch
