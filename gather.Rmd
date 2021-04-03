@@ -12,53 +12,369 @@ library(dplyr)
 library(lubridate)
 library(skimr)
 library(tidyverse)
+library(rstanarm)
 ```
 
-```{r loading_CO}
-co_june_to_oct <- read_csv("data/air_quality/CO.csv")
-co_jan_to_may <- read_csv("data/air_quality/CO_20200101-20200531.csv")
+```{r data_cleaning}
 
-co <- co_jan_to_may %>% 
-  left_join(., co_june_to_oct)
+# Covid-19 data is collected from 2020/01/15 to 2021/01/14. There is one dataset
+# about confirmed cases and one dataset about death cases. It might be a good
+# idea to first join these two datasets together by cities. Also, I decided to create a new column called death_rate that divides total death cases by total confirmed cases.
 
-# Solution for one city. Q: how to apply this to my entire dataset? 
-     
-co %>% 
-  filter(City_EN == "Beijing") %>% 
-  select(dplyr::starts_with("CO_Mean")) %>% 
-  mutate(avg_co = sum(.)/356) %>% 
-  select(avg_co)
+covid_confirmed <- read_csv("milestone3/data/covid19/City_Confirmed_20200115_20210114.csv",
+                            col_types = 
+                              cols(
+                                .default = col_double(),
+                                City_CH = col_character(),
+                                City_EN = col_character(),
+                                Prov_CH = col_character(),
+                                Prov_EN = col_character()
+                              ))
 
-# This worked!
-
-co %>% 
-  select(City_EN, starts_with("CO_Mean")) %>% 
-  rowwise() %>% 
-  mutate(avg_co = mean(c_across(CO_Mean_0101:CO_Mean_1221))) %>% 
-  select(City_EN, avg_co)
-
-co %>% 
-  select(City_EN, CO_Mean_1221) %>% 
-  summary()
-```
-```{r}
-covid_confirmed <- read_csv("data/covid19/City_Confirmed_20200115_20210114.csv")
-covid_death <- read_csv("data/covid19/City_Death_20200115_20210114.csv")
+covid_death <- read_csv("milestone3/data/covid19/City_Death_20200115_20210114.csv",
+                        col_types = 
+                          cols(
+                            .default = col_double(),
+                            City_CH = col_character(),
+                            City_EN = col_character(),
+                            Prov_CH = col_character(),
+                            Prov_EN = col_character()
+                          ))
 
 covid <- covid_confirmed %>% 
-  left_join(., covid_death)
+  left_join(., covid_death, by = c("City_EN", "Prov_EN")) %>% 
+  mutate(death_rate = T_D_210114 / T_C_210114)
+  
 
-covid_death_plot <- covid %>% 
-  select(City_EN, T_C_210114, T_D_210114) %>% 
-  mutate(death_rate = T_D_210114 / T_C_210114) %>% 
+# The air quality data consists for datasets for each of the 6 major pollutants:
+# CO, NO2, O3, PM10, PM2.5, and SO2. The collection period is from 2020/01/01 to
+# 2020/12/21. Using rowwise and c_across, I decided to calculate the average
+# measure of each of the pollutants.
+
+# CO2
+
+co_june_to_oct <- read_csv("milestone3/data/air_quality/CO.csv",
+                           col_types =
+                             cols(
+                               .default = col_double(),
+                               City_CH = col_character(),
+                               City_EN = col_character(),
+                               Prov_CH = col_character(),
+                               Prov_EN = col_character()
+                             ))
+
+co_jan_to_may <- read_csv("milestone3/data/air_quality/CO_20200101-20200531.csv",
+                          col_types =
+                             cols(
+                               .default = col_double(),
+                               City_CH = col_character(),
+                               City_EN = col_character(),
+                               Prov_CH = col_character(),
+                               Prov_EN = col_character()
+                             ))
+
+co <- co_jan_to_may %>% 
+  left_join(., co_june_to_oct, by = c("City_EN", "Prov_EN"))
+
+co <- co %>% 
+  select(City_EN, Prov_EN, starts_with("CO_Mean")) %>% 
+  rowwise() %>% 
+  mutate(avg_co = mean(c_across(CO_Mean_0101:CO_Mean_1221))) %>% 
+  select(City_EN, Prov_EN, avg_co)
+
+# NO2
+
+no2_june_to_oct <- read_csv("milestone3/data/air_quality/NO2.csv",
+                            col_types =
+                             cols(
+                               .default = col_double(),
+                               City_CH = col_character(),
+                               City_EN = col_character(),
+                               Prov_CH = col_character(),
+                               Prov_EN = col_character()
+                             ))
+
+no2_jan_to_may <- read_csv("milestone3/data/air_quality/NO2_20200101-20200531.csv",
+                           col_types =
+                             cols(
+                               .default = col_double(),
+                               City_CH = col_character(),
+                               City_EN = col_character(),
+                               Prov_CH = col_character(),
+                               Prov_EN = col_character()
+                             ))
+
+no2 <- no2_jan_to_may %>% 
+  left_join(., no2_june_to_oct, by = c("City_EN", "Prov_EN"))
+
+no2 <- no2 %>% 
+  select(City_EN, Prov_EN, starts_with("NO2_Mean")) %>% 
+  rowwise() %>% 
+  mutate(avg_no2 = mean(c_across(NO2_Mean_0101:NO2_Mean_1221))) %>% 
+  select(City_EN, Prov_EN, avg_no2)
+
+# O3
+
+o3_june_to_oct <- read_csv("milestone3/data/air_quality/O3.csv",
+                           col_types =
+                             cols(
+                               .default = col_double(),
+                               City_CH = col_character(),
+                               City_EN = col_character(),
+                               Prov_CH = col_character(),
+                               Prov_EN = col_character()
+                             ))
+
+o3_jan_to_may <- read_csv("milestone3/data/air_quality/O3_20200101-20200531.csv",
+                          col_types =
+                             cols(
+                               .default = col_double(),
+                               City_CH = col_character(),
+                               City_EN = col_character(),
+                               Prov_CH = col_character(),
+                               Prov_EN = col_character()
+                             ))
+
+o3 <- o3_jan_to_may %>% 
+  left_join(., o3_june_to_oct, by = c("City_EN", "Prov_EN"))
+
+o3 <- o3 %>% 
+  select(City_EN, Prov_EN, starts_with("O3_Mean")) %>% 
+  rowwise() %>% 
+  mutate(avg_o3 = mean(c_across(O3_Mean_0101:O3_Mean_1221))) %>% 
+  select(City_EN, Prov_EN, avg_o3)
+
+# PM10
+
+pm10_june_to_oct <- read_csv("milestone3/data/air_quality/PM10.csv",
+                             col_types =
+                             cols(
+                               .default = col_double(),
+                               City_CH = col_character(),
+                               City_EN = col_character(),
+                               Prov_CH = col_character(),
+                               Prov_EN = col_character()
+                             ))
+pm10_jan_to_may <- read_csv("milestone3/data/air_quality/PM10_20200101-20200531.csv",
+                            col_types =
+                             cols(
+                               .default = col_double(),
+                               City_CH = col_character(),
+                               City_EN = col_character(),
+                               Prov_CH = col_character(),
+                               Prov_EN = col_character()
+                             ))
+
+pm10 <- pm10_jan_to_may %>% 
+  left_join(., pm10_june_to_oct, by = c("City_EN", "Prov_EN"))
+
+pm10 <- pm10 %>% 
+  select(City_EN, Prov_EN, starts_with("PM10_Mean")) %>% 
+  rowwise() %>% 
+  mutate(avg_pm10 = mean(c_across(PM10_Mean_0101:PM10_Mean_1221))) %>% 
+  select(City_EN, Prov_EN, avg_pm10)
+
+# PM2.5
+
+pm2.5_june_to_oct <- read_csv("milestone3/data/air_quality/PM2.5.csv",
+                              col_types =
+                             cols(
+                               .default = col_double(),
+                               City_CH = col_character(),
+                               City_EN = col_character(),
+                               Prov_CH = col_character(),
+                               Prov_EN = col_character()
+                             ))
+
+pm2.5_jan_to_may <- read_csv("milestone3/data/air_quality/PM2.5_20200101-20200531.csv",
+                             col_types =
+                             cols(
+                               .default = col_double(),
+                               City_CH = col_character(),
+                               City_EN = col_character(),
+                               Prov_CH = col_character(),
+                               Prov_EN = col_character()
+                             ))
+
+pm2.5 <- pm2.5_jan_to_may %>% 
+  left_join(., pm2.5_june_to_oct, by = c("City_EN", "Prov_EN"))
+
+pm2.5 <- pm2.5 %>% 
+  select(City_EN, Prov_EN, starts_with("PM2.5_Mean")) %>% 
+  rowwise() %>% 
+  mutate(avg_pm2.5 = mean(c_across(PM2.5_Mean_0101:PM2.5_Mean_1221))) %>% 
+  select(City_EN, Prov_EN, avg_pm2.5)
+
+# SO2
+
+so2_june_to_oct <- read_csv("milestone3/data/air_quality/SO2.csv",
+                            col_types =
+                             cols(
+                               .default = col_double(),
+                               City_CH = col_character(),
+                               City_EN = col_character(),
+                               Prov_CH = col_character(),
+                               Prov_EN = col_character()
+                             ))
+
+so2_jan_to_may <- read_csv("milestone3/data/air_quality/SO2_20200101-20200531.csv",
+                           col_types =
+                             cols(
+                               .default = col_double(),
+                               City_CH = col_character(),
+                               City_EN = col_character(),
+                               Prov_CH = col_character(),
+                               Prov_EN = col_character()
+                             ))
+
+so2 <- so2_jan_to_may %>% 
+  left_join(., so2_june_to_oct, by = c("City_EN", "Prov_EN"))
+
+so2 <- so2 %>% 
+  select(City_EN, Prov_EN, starts_with("SO2_Mean")) %>% 
+  rowwise() %>% 
+  mutate(avg_so2 = mean(c_across(SO2_Mean_0101:SO2_Mean_1221))) %>% 
+  select(City_EN, Prov_EN, avg_so2)
+
+# Now that I have cleaned the datasets on both COVID-19 and air quality, I
+# decided to combine all of them into a single covid_aq tibble, and save it into
+# a new csv file. This way, I can simply call on this new csv file whenever I
+# want to perform visualization and/or data analysis.
+
+covid_aq <- covid %>% 
+  left_join(., co, by = c("City_EN", "Prov_EN")) %>%
+  left_join(., no2, by = c("City_EN", "Prov_EN")) %>% 
+  left_join(., o3, by = c("City_EN", "Prov_EN")) %>% 
+  left_join(., pm10, by = c("City_EN", "Prov_EN")) %>% 
+  left_join(., pm2.5, by = c("City_EN", "Prov_EN")) %>% 
+  left_join(., so2, by = c("City_EN", "Prov_EN")) %>% 
+  select(City_EN, Prov_EN, death_rate, T_C_210114, T_D_210114, avg_co, avg_no2,
+         avg_o3, avg_pm10, avg_pm2.5, avg_so2)
+
+# Now that I have a tibble called covid_aq that contains all of the columns of
+# interest, let's save it into a new csv file! Notice that I'm commenting out
+# the write_csv since I don't want to overwrite it everytime I run this code
+# chunk.
+
+## write_csv(covid_aq, "milestone3/clean/covid_aq.csv")
+```
+
+```{r covid_death_plot}
+
+# COVID-19 death rate plot (city-level)
+
+# Here, I want to make a bar graph that shows which of the cities in China have
+# high COVID-19 death rates. By filling with total cases at the end of the
+# collection period, I try to show that cities with many total cnfirmed cases
+# don't necessarily have high death rates.
+
+covid_aq %>% 
   arrange(desc(death_rate)) %>% 
   filter(death_rate > 0.07) %>% 
   ggplot(aes(x = City_EN,
-             y = death_rate)) +
+             y = death_rate,
+             fill = T_C_210114)) +
   geom_col() +
   coord_flip() +
   labs(title = "Top 10 Chinese Cities with Highest COVID-19 Death Rate",
+       subtitle = "Having many total cases doesn't necessarily mean having high death rates!",
        x = "Cities",
-       y = "Death Rates")
+       y = "Death Rates",
+       fill = "Total Cases",
+       caption = "Source: Harvard Dataverse") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  theme_classic()
+
+# COVID-19 death rate plot (province-level)
+
+# I do the same, but this time with provinces instead of cities. It might be
+# more intuitive if I could show this using the map of China, but for now let's
+# settle on the bar plots.
+
+covid_aq %>% 
+  arrange(desc(death_rate)) %>% 
+  filter(death_rate > 0.07) %>% 
+  ggplot(aes(x = Prov_EN,
+             y = death_rate,
+             fill = T_C_210114)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "Top 10 Chinese Provinces with Highest COVID-19 Death Rate",
+       subtitle = "Having many total cases doesn't necessarily mean having high death rate!",
+       x = "Provinces",
+       y = "Death Rates",
+       fill = "Total Cases",
+       caption = "Source: Harvard Dataverse") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  theme_classic()
+```
+
+```{r covid_aq_scatter_plot}
+
+# Scatter plot (Covid death rate vs CO)
+
+covid_aq %>% 
+  filter(death_rate != 0) %>% 
+  ggplot(aes(x = avg_co,
+             y = death_rate)) +
+  geom_point() +
+  geom_smooth(method = "lm",
+              formula = y ~ x)
+
+# Scatter plot (Covid death rate vs NO2)
+
+covid_aq %>% 
+  filter(death_rate != 0) %>% 
+  ggplot(aes(x = avg_no2,
+             y = death_rate)) +
+  geom_point() +
+  geom_smooth(method = "lm",
+              formula = y ~ x)
+
+# Scatter plot (Covid death rate vs O3)
+
+covid_aq %>% 
+  filter(death_rate != 0) %>% 
+  ggplot(aes(x = avg_o3,
+             y = death_rate)) +
+  geom_point() +
+  geom_smooth(method = "lm",
+              formula = y ~ x)
+
+# Scatter plot (Covid death rate vs PM10)
+
+covid_aq %>% 
+  filter(death_rate != 0) %>% 
+  ggplot(aes(x = avg_pm10,
+             y = death_rate)) +
+  geom_point() +
+  geom_smooth(method = "lm",
+              formula = y ~ x)
+
+# Scatter plot (Covid death rate vs PM2.5)
+
+covid_aq %>% 
+  filter(death_rate != 0) %>% 
+  ggplot(aes(x = avg_pm2.5,
+             y = death_rate)) +
+  geom_point() +
+  geom_smooth(method = "lm",
+              formula = y ~ x)
+
+# Scatter plot (Covid death rate vs SO2)
+
+covid_aq %>% 
+  filter(death_rate != 0) %>% 
+  ggplot(aes(x = avg_so2,
+             y = death_rate)) +
+  geom_point() +
+  geom_smooth(method = "lm",
+              formula = y ~ x)
+```
+
+
+```{r regression_death_rate_vs_so2}
+stan_glm(data = covid_aq,
+         formula = death_rate ~ )
 ```
 
