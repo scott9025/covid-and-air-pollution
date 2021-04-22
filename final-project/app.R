@@ -18,8 +18,6 @@ library(broom)
 library(gtsummary)
 library(gt)
 
-#source("make_model_death_so2.R")
-
 covid_aq <- read_csv("clean/covid_aq.csv",
                      col_types =
                        cols(
@@ -75,9 +73,11 @@ ui <- navbarPage(
              )
            ),
     tabPanel("Model",
-             titlePanel("Fitted Model: Death Rate on SO2"),
-             tableOutput("model"),
-             p("This model shows my posterior on the causal relationship between COVID-19 death rate and SO2 level in China. According to the model, when the average SO2 level is 0, the corresponding death rate is 0.78 percentage points. Since the standard deviation is 1.04, the 95% confidence interval for this value is between -0.26 and 1.82. Also, according to the model, on average, 1 mug/m^3 increase in SO2 increases the death rate by 0.29 percentage points. Given that the standard deviation is 0.1, the 95% confidence interval for this value is between 0.19 and 0.39.")
+             titlePanel("Fitted Model: Regressing COVID-19 Death Rate on Air Pollutants, City Population, and City Size"),
+             br(),
+             htmlOutput("model"),
+             br(),
+             p("Interpretation")
              ),
     tabPanel("Discussion",
              titlePanel("Data Sources"),
@@ -218,9 +218,9 @@ server <- function(input, output) {
     
   })
   
-  output$model <- renderTable({
+  output$model <- renderUI({
     
-    summary_fit_so2
+    print(table_1)
     
   })
   

@@ -17,6 +17,10 @@ library(tidyverse)
 library(rstanarm)
 library(xtable)
 library(readxl)
+library(broom.mixed)
+library(gtsummary)
+library(gt)
+library(ggdist)
 
 ```
 
@@ -412,7 +416,7 @@ covid_aq %>%
 ```
 
 
-```{r regression_death_rate_vs_so2}
+```{r regression_1}
 # For the fitted model, I decided to remove all rows with death rate = 0, since
 # I wanted to focus on cities with at least one death case. 
 
@@ -429,6 +433,31 @@ fit_1 <- stan_glm(data = covid_aq_no_zero,
          seed = 13,
          refresh = 0)
 
-summary(fit_1, digits = 4)
+table_1 <- tbl_regression(fit_1, 
+               intercept = TRUE, 
+               estimate_fun = function(x) style_sigfig(x, digits = 10)) %>%
+  
+  # Since the coefficients are relatively small, let's use digits = 4.
+  
+  as_gt() %>% 
+  cols_label(estimate = md("**Parameter**")) %>%
+  tab_header(title = md("**COVID-19 Death Rate**"),
+             subtitle = "How Air Pollutants, Population, and Land Area Predict COVID-19 Death Rates") %>% 
+  
+  # We always want our tables or plots to stand alone. Therefore, adding
+  # descriptive titles is always a good idea!
+  
+  tab_source_note(md("Source: Harvard Dataverse"))
+
+# Let's comment out gtsave so that we don't accidently overwrite it when running
+# the code chunks.
+
+## table_1 %>%
+##  gtsave("table_1.html", path = "final-project/")
+
+```
+
+```{r regression_2}
+
 ```
 
