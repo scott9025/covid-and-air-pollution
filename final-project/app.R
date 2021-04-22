@@ -37,7 +37,7 @@ covid_aq <- read_csv("clean/covid_aq.csv",
                        ))
 
 ui <- navbarPage(
-    "Final Project Milestone #6",
+    "Final Project",
     tabPanel("Data",
              fluidPage(
                titlePanel("COVID-19 Death Rate Plot"),
@@ -61,11 +61,12 @@ ui <- navbarPage(
              ),
     tabPanel("Discussion",
              titlePanel("Data Sources"),
-             p("I found two datasets in Harvard Dataverse that relate to my project topic: 1) Air Quality Data and 2) COVID-19 Data."),
-             p("Both datasets contain data collected in various cities in China."),
+             p("I found three datasets in Harvard Dataverse that relate to my project topic: 1) Air Quality Data, 2) COVID-19 Data, 3) Census Data"),
+             p("All three datasets contain data collected in various cities in China."),
              p("You can access each of the datasets below."),
              a("China Air Quality Data", href = "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/XETLSS"),
-             a("China COVID-19 Data", href = "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/MR5IJN")),
+             a("China COVID-19 Data", href = "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/MR5IJN"),
+             a("China Census Data", href = "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/GLKQME")),
     tabPanel("About", 
              titlePanel("About"),
              p("For milestone #6, I decided to make an interative graphs of top 10 Chinese cities/provinces with highest COVID-19 deah rate. I filled with total COVID-19 cases to see whether cities with many total cases also have high death rates. Looking at the graphs, it does not seem like it. Also, using stan_glm, I made a fitted model between COVID-19 death rate and SO2 level in China. See the Model panel for details."),
