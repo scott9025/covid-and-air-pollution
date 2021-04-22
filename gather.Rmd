@@ -8,6 +8,8 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+# Load packages
+
 library(dplyr)
 library(lubridate)
 library(skimr)
@@ -19,7 +21,6 @@ library(readxl)
 ```
 
 ```{r data_cleaning}
-
 # Covid-19 data is collected from 2020/01/15 to 2021/01/14. There is one dataset
 # about confirmed cases and one dataset about death cases. It might be a good
 # idea to first join these two datasets together by cities. Also, I decided to create a new column called death_rate that divides total death cases by total confirmed cases.
@@ -280,7 +281,6 @@ covid_aq <- covid_aq %>%
 ```
 
 ```{r covid_death_plot}
-
 # COVID-19 death rate plot (city-level)
 
 # Here, I want to make a bar graph that shows which of the cities in China have
@@ -327,9 +327,14 @@ covid_aq %>%
        caption = "Source: Harvard Dataverse") +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   theme_classic()
+
 ```
 
 ```{r covid_aq_scatter_plot}
+# For the following scatter plots, the goal is to show whether the correlation
+# between COVID death rate and each of the pollutants is weak or strong. Since
+# we will use the same format for all pollutants (changing the variables using
+# if, else), we only need to make one plot with appropriate aesthetics.
 
 # Scatter plot (Covid death rate vs CO)
 
@@ -345,7 +350,9 @@ covid_aq %>%
        subtitle = "Seems like there is a weak correlation between the two",
        x = "Average CO",
        y = "Death Rates",
-       caption = "Source: Harvard Dataverse")
+       caption = "Source: Harvard Dataverse") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  theme_bw()
 
 # Scatter plot (Covid death rate vs NO2)
 
@@ -401,24 +408,27 @@ covid_aq %>%
   geom_smooth(method = "lm",
               formula = y ~ x,
               na.rm = TRUE)
+
 ```
 
 
 ```{r regression_death_rate_vs_so2}
-
 # For the fitted model, I decided to remove all rows with death rate = 0, since
-# I wanted to focus on cities with at least one death case. Also, I multiplied
-# death rates by 100, since running stan_glm with regular death_rate returned
-# really small coefficients (marked 0.0 with the model only showing up to the
-# nearest 10th).
+# I wanted to focus on cities with at least one death case. 
 
 covid_aq_no_zero <- covid_aq %>% 
-  filter(death_rate != 0) %>% 
-  mutate(death_rate_100 = death_rate * 100)
+  filter(death_rate != 0)
 
-stan_glm(data = covid_aq_no_zero,
-         formula = death_rate_100 ~ avg_so2, 
+# Even though the plot above showed strong correlation only between death rate
+# and SO2, let's include all 6 pollutants for fit 1. Also, let's control for
+# population and area since intuitively they are related to the death rate.
+
+fit_1 <- stan_glm(data = covid_aq_no_zero,
+         formula = death_rate ~ avg_co + avg_no2 + avg_o3 + avg_pm10 + 
+           avg_pm2.5 + avg_so2 + total_pop + total_area, 
          seed = 13,
          refresh = 0)
+
+summary(fit_1, digits = 4)
 ```
 

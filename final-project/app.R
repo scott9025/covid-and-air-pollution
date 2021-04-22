@@ -18,7 +18,7 @@ library(broom)
 library(gtsummary)
 library(gt)
 
-source("make_model_death_so2.R")
+#source("make_model_death_so2.R")
 
 covid_aq <- read_csv("clean/covid_aq.csv",
                      col_types =
@@ -38,9 +38,9 @@ covid_aq <- read_csv("clean/covid_aq.csv",
 
 ui <- navbarPage(
     "Final Project",
-    tabPanel("Data",
+    tabPanel("Data 1",
              fluidPage(
-               titlePanel("COVID-19 Death Rate Plot"),
+               titlePanel("COVID-19 Death Rate"),
                sidebarLayout(
                  sidebarPanel(
                    selectInput(
@@ -54,6 +54,26 @@ ui <- navbarPage(
                  )
                )
              ),
+    tabPanel("Data 2",
+             fluidPage(
+               titlePanel("Death Rate vs Air Pollutant"),
+               sidebarLayout(
+                 sidebarPanel(
+                   selectInput(
+                     "var_plot2",
+                     "Choose a Response Category",
+                     choices = c("CO" = "co",
+                                 "NO2" = "no2",
+                                 "O3" = "o3",
+                                 "PM10" = "pm10",
+                                 "PM2.5" = "pm2.5",
+                                 "SO2" = "so2")
+                   ),
+                   width = 300),
+                 plotOutput("aq_plot")
+               )
+             )
+           ),
     tabPanel("Model",
              titlePanel("Fitted Model: Death Rate on SO2"),
              tableOutput("model"),
@@ -121,6 +141,82 @@ server <- function(input, output) {
       theme_classic()
    
     })
+  
+  output$aq_plot <- renderPlot({
+    
+    # Since we have 6 possible options, we want to use if, else if, and else,
+    # rather than ifelse, which is only useful for 2 options.
+    
+    if(input$var_plot2 == "co")
+    {z <- covid_aq %>%
+      filter(death_rate != 0) %>% 
+      .$avg_co}
+    else if(input$var_plot2 == "no2")
+    {z = covid_aq %>% 
+      filter(death_rate != 0) %>% 
+      .$avg_no2}
+    else if(input$var_plot2 == "o3")
+    {z = covid_aq %>% 
+      filter(death_rate != 0) %>% 
+      .$avg_o3}
+    else if(input$var_plot2 == "pm10")
+    {z = covid_aq %>% 
+      filter(death_rate != 0) %>% 
+      .$avg_pm10}
+    else if(input$var_plot2 == "pm2.5")
+    {z = covid_aq %>% 
+      filter(death_rate != 0) %>% 
+      .$avg_pm2.5}
+    else
+    {z = covid_aq %>% 
+      filter(death_rate != 0) %>% 
+      .$avg_so2}
+    
+    # Defining pollutant would allow us to do 2 things at once: 1) modify the
+    # name of the x-axis, and 2) modify the title.
+    
+    if(input$var_plot2 == "co")
+    {pollutant <- "CO"}
+    else if(input$var_plot2 == "no2")
+    {pollutant <- "NO2"}
+    else if(input$var_plot2 == "o3")
+    {pollutant <- "O3"}
+    else if(input$var_plot2 == "pm10")
+    {pollutant <- "PM10"}
+    else if(input$var_plot2 == "pm2.5")
+    {pollutant <- "PM2.5"}
+    else
+    {pollutant <- "SO2"}
+    
+    # Since only SO2 shows a relatively strong correlation against death rate,
+    # let's make our subtitle accordingly.
+    
+    if(input$var_plot2 %in% c("co", "no2", "o3", "pm10", "pm2.5"))
+    {strength <- "weak"}
+    else
+    {strength <- "strong"}
+    
+    covid_aq %>% 
+      filter(death_rate != 0) %>% 
+      ggplot(aes(x = z,
+                 y = death_rate)) +
+      geom_point(na.rm = TRUE) +
+      geom_smooth(method = "lm",
+                  formula = y ~ x,
+                  na.rm = TRUE) +
+      labs(title = paste("Correlation between COVID-19 death rate and", 
+                         pollutant),
+           subtitle = paste("Seems like there is a", 
+                            strength, 
+                            "correlation between the two"),
+           x = paste("Average",
+                     pollutant),
+           y = "Death Rates",
+           caption = "Source: Harvard Dataverse") +
+      scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+      theme_bw()
+    
+  })
   
   output$model <- renderTable({
     
