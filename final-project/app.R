@@ -111,26 +111,41 @@ ui <- navbarPage(
     # It's always a good idea to explain any extra assumption made to create the
     # plot.
 
-    tabPanel("Model",
+    tabPanel("Data Analysis",
              
     # Here, I explore further the relationship between SO2 and COVID-19 death
     # rate.
     
-    titlePanel("Model"),
-             h3("Regressing COVID-19 death rate on SO2"),
+    titlePanel("Data Analysis"),
+             h3("Simple model: Regressing COVID-19 death rate on SO2"),
              p("Given that SO2 had a strongest correlation with COVID-19 death rate, 
                I decided to regress SO2 on COVID-19 death rate to explore further the relationship between the two.
                It would have been ideal if I could control for all other variables that are correlated to both SO2 and COVID-19 death rate;
                however, due to limitation on data availability, I could only control for populations and sizes of cities."),
-             br(),
-             img(src = "table_1.png", height = "100%", width = "100%"),
+             img(src = "table_1.png", height = "50%", width = "50%",
+                 style = "display: block; margin-left: auto; margin-right: auto;"),
     
              # For some reason, shiny app recognizes an image only if it's
-             # inside a folder called www.
+             # inside a folder called www. Also, using style is one way to
+             # center the image.
     
              br(),
-             p("y_i"),
-             p("Interpretation")
+             p("According to the regression results, COVID-19 death rate of a city with 0 micrograms per cubic meter of SO2, 
+               and population and size of 0 is likely to be about 3.8%. 
+               I am 95% confident that this value is between 1.3% and 6.2%.
+               Now, in reality, there is no such city, and thus the value of the (Intercept) is not particularly meaningful in this model."),
+             p("The coefficient of SO2, however, is more meaningful; 
+               on average, every 1 microgram per cubic meter increase is associated with about 0.2% increase in COVID-19 death rate, controlling for city population and city size.
+               I am 95% confident that this value is between 0.0068% and 0.039%.
+               Note that this is not a causal claim.
+               In order for it to show a causal relationship between the two, the regression must control for all confounding variables that are correlated to both COVID-19 death rate and SO2.
+               Obviously, my simple model does not control for all confounding variables."),
+             p("Still, the model provides an useful general relationship between COVID-19 death rate and SO2.
+               For example, given that each of any two cities has 5,525,020 people (mean population) and 1.45 GIS (mean size), 
+               city with average SO2 level of 10 micrograms per cubic meter (below the permissible level of 20 micrograms per cubic meter) is likely to have COVID-19 death rate of about 3.8%,
+               whereas city with average SO2 level of 30 micrograms per cubic meter (above the permissible level) is likely to have COVID-19 death rate of about 7.7%.
+               That is, the latter city is likely to have COVID-19 death rate that is more than double that of the former city."),
+             plotOutput("posterior")
              ),
     tabPanel("Technical Details",
              titlePanel("Technical Details"),
@@ -274,6 +289,46 @@ server <- function(input, output) {
            caption = "Source: Harvard Dataverse") +
       scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
       theme_bw()
+    
+  })
+  
+  output$posterior <- renderPlot({
+    
+    pe <- readRDS("pe.rds")
+    
+    # First step here is to store the previously created rds in pe.
+    
+    pe %>% 
+      ggplot(aes(x = outcome,
+                 fill = groups)) +
+      geom_histogram(aes(y = after_stat(count/sum(count))),
+                     alpha = 0.5,
+                     bins = 100,
+                     position = "identity") +
+      
+      # Just as a reminder, this is our usual histogram arguments. Since there
+      # are some overlaps between the five distributions, I want to set alpha to
+      # some value less than 1.
+      
+      scale_x_continuous(labels = scales::percent_format(accuracy = 1),
+                         breaks = seq(-0.05, 0.2, 0.01)) +
+      scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+      
+      # I want both our x- and y-axis in percent format. Also, by setting
+      # accuracy equal to 1, I can get rid of any decimal points.
+      
+      labs(title = "Posterior Distribution of the Expected Value of the COVID-19 Death Rate",
+           subtitle = "Cities with SO2 level above the permissible level (20) are likely to have COVID-19 death rates \nmore than twice as high COVID-19 death rates as cities with SO2 level below the permissible level",
+           x = "COVID-19 Death Rate",
+           y = NULL,
+           fill = "SO2 Level \n(Micrograms per Cubic Meter)",
+           caption = "Source: Harvard Dataverse") +
+      
+      # Using \n helps us avoid the texts running over the page since \n means
+      # new line.
+      
+      theme_bw() +
+      theme(legend.position = "bottom")
     
   })
   

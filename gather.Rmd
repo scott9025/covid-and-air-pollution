@@ -448,15 +448,82 @@ table_1 <- tbl_regression(fit_1,
   
   tab_source_note(md("Source: Harvard Dataverse"))
 
-# Let's comment out saveRDS so that we don't accidently overwrite it.
+# Let's comment out gtsave so that we don't accidently overwrite it.
 
-gtsave(table_1, filename = "final-project/www/table_1.png")
+## gtsave(table_1, filename = "final-project/www/table_1.png")
 
-## saveRDS(fit_1, file = "final-project/clean/fit1")
+# Although saving fit_1 using saveRDS and using it to produce table_1 inside
+# app.R would be more preferred, doing so led to a deployment error.
 
 ```
 
 ```{r regression_2}
-newobs <- tibble(avg_so2 = )
+newobs <- tibble(avg_so2 = c(0, 10, 20, 30, 40),
+                 total_pop = 5525020,
+                 total_area = 1.45)
+
+# Here, we want our newobs to contain the average SO2 level of 5 different
+# cities. Since we are mainly interested in SO2, we can plug in average values
+# for city population and city size.
+
+pe <- posterior_epred(fit_1,
+                newdata = newobs) %>% 
+  as_tibble() %>% 
+  
+  # The result we get from using posterior_epred is not a tibble. Thus,
+  # converting the results into a tibble is a good idea!
+  
+  rename("SO2-0" = `1`,
+         "SO2-10" = `2`,
+         "SO2-20" = `3`,
+         "SO2-30" = `4`,
+         "SO2-40" = `5`) %>% 
+  
+  # As usual, renaming the column names into something meaningful is always a
+  # good idea.
+  
+  pivot_longer(cols = everything(),
+               names_to = "groups",
+               values_to = "outcome")
+
+  # Since we want to make five distributions separated by SO2 levels, we use
+  # pivot longer to separate SO2 levels and their respective outcome values.
+
+# Let's comment out saveRDS so that we don't accidently overwrite it.
+
+## saveRDS(pe, file = "final-project/pe.rds")
+
+pe %>% 
+  ggplot(aes(x = outcome,
+             fill = groups)) +
+  geom_histogram(aes(y = after_stat(count/sum(count))),
+                 alpha = 0.5,
+                 bins = 100,
+                 position = "identity") +
+  
+  # Just as a reminder, this is our usual histogram arguments. Since there are
+  # some overlaps between the five distributions, we want to set alpha to some
+  # value less than 1.
+  
+  scale_x_continuous(labels = scales::percent_format(accuracy = 1),
+                     breaks = seq(-0.05, 0.2, 0.01)) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  
+  # We want both our x- and y-axis in percent format. Also, by setting accuracy
+  # equal to 1, we can get rid of any decimal points.
+  
+  labs(title = "Posterior Distribution of the Expected Value of the COVID-19 Death Rate",
+       subtitle = "Cities with SO2 level above the permissible level (20) are likely to have COVID-19 death rates \nmore than twice as high COVID-19 death rates as cities with SO2 level below the permissible level",
+       x = "COVID-19 Death Rate",
+       y = NULL,
+       fill = "SO2 Level \n(Micrograms per Cubic Meter)",
+       caption = "Source: Harvard Dataverse") +
+  
+  # Using \n helps us avoid the texts running over the page since \n means new
+  # line.
+  
+  theme_bw() +
+  theme(legend.position = "bottom")
+
 ```
 
