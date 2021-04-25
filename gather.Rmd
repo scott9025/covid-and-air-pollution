@@ -423,13 +423,12 @@ covid_aq %>%
 covid_aq_no_zero <- covid_aq %>% 
   filter(death_rate != 0)
 
-# Even though the plot above showed strong correlation only between death rate
-# and SO2, let's include all 6 pollutants for fit 1. Also, let's control for
-# population and area since intuitively they are related to the death rate.
+# Since the plot above showed strong correlation only between death rate and
+# SO2, let's regress death_rate on avg_so2. Also, let's control for population
+# and area since intuitively they are related to the death rate.
 
 fit_1 <- stan_glm(data = covid_aq_no_zero,
-         formula = death_rate ~ avg_co + avg_no2 + avg_o3 + avg_pm10 + 
-           avg_pm2.5 + avg_so2 + total_pop + total_area, 
+         formula = death_rate ~ avg_so2 + total_pop + total_area, 
          seed = 13,
          refresh = 0)
 
@@ -437,12 +436,12 @@ table_1 <- tbl_regression(fit_1,
                intercept = TRUE, 
                estimate_fun = function(x) style_sigfig(x, digits = 10)) %>%
   
-  # Since the coefficients are relatively small, let's use digits = 4.
+  # Since the coefficients are relatively small, let's use digits = 10.
   
   as_gt() %>% 
   cols_label(estimate = md("**Parameter**")) %>%
   tab_header(title = md("**COVID-19 Death Rate**"),
-             subtitle = "How Air Pollutants, Population, and Land Area Predict COVID-19 Death Rates") %>% 
+             subtitle = "How SO2, Population, and Land Area Predict COVID-19 Death Rates") %>% 
   
   # We always want our tables or plots to stand alone. Therefore, adding
   # descriptive titles is always a good idea!
@@ -458,6 +457,6 @@ table_1 <- tbl_regression(fit_1,
 ```
 
 ```{r regression_2}
-#testing if commit works
+
 ```
 

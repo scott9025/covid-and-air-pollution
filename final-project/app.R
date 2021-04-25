@@ -1,22 +1,9 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-
 library(shiny)
-library(dplyr)
-library(lubridate)
-library(skimr)
+library(shinythemes)
 library(tidyverse)
-library(rstanarm)
-library(xtable)
-library(broom)
-library(gtsummary)
-library(gt)
+
+# It is a good idea to load packages that are absolutely necessary to run the
+# shiny app. Otherwise, running the app could take a long time.
 
 covid_aq <- read_csv("clean/covid_aq.csv",
                      col_types =
@@ -34,67 +21,133 @@ covid_aq <- read_csv("clean/covid_aq.csv",
                          avg_so2 = col_double()
                        ))
 
+# Here, I am calling the dataset that has been cleaned up in gather.Rmd. Also,
+# by setting col_types as above, I can avoid an unnecessary warning message.
+
 ui <- navbarPage(
-    "Final Project",
-    tabPanel("Data 1",
-             fluidPage(
-               titlePanel("COVID-19 Death Rate"),
-               sidebarLayout(
-                 sidebarPanel(
-                   selectInput(
-                     "var_plot",
-                     "Choose a Response Category",
-                     choices = c("City" = "city",
-                                 "Province" = "province")
-                   ),
-                   width = 300),
-                 plotOutput("death_plot")
-                 )
-               )
+    "COVID-19 Death Rate and Air Pollution Level in China",
+    
+    # A rather vague title, but interesting enough to catch attention.
+    
+    theme = shinytheme("sandstone"),
+    
+    # The shinytheme package has a range of wonderful themes to choose from.
+    
+    tabPanel("Background Information",
+             
+    # Let's begin by talking about some background information on the topic.
+    
+    titlePanel("Background Information"),
+             h3("15% of COVID-19 deaths worldwide could be attributed to air pollution"),
+             p("Both short- and long-term exposure to high levels of air pollution can cause a whole variety of adverse health outcomes. 
+               It could mean that residents - without knowing it - have pre-damaged lungs or blood vessels, a higher risk for a severe course of the disease."),
+             p("Air pollution refers to the release of pollutants into the air that are detrimental to human health and the health of other animals. 
+               The WHO estimates that around 7 million people die every year from exposure to polluted air. 
+               Ambient air pollution alone caused some 4.2 million deaths in 2016, while household air pollution, e.g. from cooking with pollution fuels indoors caused an estimated 3.8 million deaths in the same period."),
+             p("Many different substances are summarised under the term air pollution. 
+               The most important ones are particulate matter (PM), ground-level ozone, nitrogen oxides, sulfur oxides, volatile organic compounds and polycyclic aromatic hydrocarbon. 
+               A large fraction of air pollutants is man-made. 
+               Most air pollution comes from energy use and production. 
+               This includes traffic and fuel combustion during industrial production processes."),
+    
+    # Here, I explain why air pollution might be related to COVID-19 death rate.
+             
+             h3("Overview of COVID-19 Death Rate in China"),
+                       fluidPage(
+                         sidebarLayout(
+                           sidebarPanel(
+                             selectInput(
+                               "var_plot",
+                               "Choose a Response Category",
+                               choices = c("City" = "city",
+                                           "Province" = "province")
+                             ),
+                             width = 300),
+                           plotOutput("death_plot")
+                           )
+                         ),
+             p("Initially, I expected cities/provinces with higher number of total confirmed COVID-19 cases to have higher COVID-19 death rates.
+               However, as seen in the plot above, my expectation turned out to be incorrect.
+               Wuhan, a city that had the highest number of total confirmed cases, was ranked 9th in terms of COVID-19 death rate.
+               Similarly, Hubei, a province that had the highest number of total confirmed cases, was also ranked 9th.")
              ),
-    tabPanel("Data 2",
-             fluidPage(
-               titlePanel("Death Rate vs Air Pollutant"),
-               sidebarLayout(
-                 sidebarPanel(
-                   selectInput(
-                     "var_plot2",
-                     "Choose a Response Category",
-                     choices = c("CO" = "co",
-                                 "NO2" = "no2",
-                                 "O3" = "o3",
-                                 "PM10" = "pm10",
-                                 "PM2.5" = "pm2.5",
-                                 "SO2" = "so2")
-                   ),
-                   width = 300),
-                 plotOutput("aq_plot")
-               )
-             )
-           ),
+    
+    # This plot is pretty much self-explanatory. However, it's always good to
+    # have some additional explanation.
+    
+    tabPanel("Data Exploration",
+             
+    # Next, I decided to play around with the data to see if there are any
+    # meaningful correlations between COVID-19 death rate and each of the major
+    # pollutants.
+    
+    titlePanel("Data Exploration"),
+            h3("Correlations between COVID-19 death rate and each of the major pollutants"),
+                       fluidPage(
+                         sidebarLayout(
+                           sidebarPanel(
+                             selectInput(
+                               "var_plot2",
+                               "Choose a Response Category",
+                               choices = c("CO" = "co",
+                                           "NO2" = "no2",
+                                           "O3" = "o3",
+                                           "PM10" = "pm10",
+                                           "PM2.5" = "pm2.5",
+                                           "SO2" = "so2")
+                             ),
+                             width = 300),
+                           plotOutput("aq_plot")
+                         )
+                       ),
+            p("Since various studies have found a positive relationship between COVID-19 death rate and air pollution,
+              I expected strong positive correlations between COVID-19 death rate and each of the major pollutants.
+              Surprisingly, only SO2 showed a relatively strong positive correlation with COVID-19 death rate.
+              Some pollutants, such as NO2 and PM2.5, even showed slightly negative correlations.
+              One thing to note here is that I created scatterplots using cities that have at least one COVID-19 death case,
+              significantly decreasing the total number of cities used from 339 cities to 74 cities.")
+    ),
+    
+    # It's always a good idea to explain any extra assumption made to create the
+    # plot.
+
     tabPanel("Model",
-             titlePanel("Fitted Model: Regressing COVID-19 Death Rate on Air Pollutants, City Population, and City Size"),
+             
+    # Here, I explore further the relationship between SO2 and COVID-19 death
+    # rate.
+    
+    titlePanel("Model"),
+             h3("Regressing COVID-19 death rate on SO2"),
+             p("Given that SO2 had a strongest correlation with COVID-19 death rate, 
+               I decided to regress SO2 on COVID-19 death rate to explore further the relationship between the two.
+               It would have been ideal if I could control for all other variables that are correlated to both SO2 and COVID-19 death rate;
+               however, due to limitation on data availability, I could only control for populations and sizes of cities."),
              br(),
              htmlOutput("model"),
              br(),
+             p("y_i"),
              p("Interpretation")
              ),
-    tabPanel("Discussion",
-             titlePanel("Data Sources"),
-             p("I found three datasets in Harvard Dataverse that relate to my project topic: 1) Air Quality Data, 2) COVID-19 Data, 3) Census Data"),
+    tabPanel("Technical Details",
+             titlePanel("Technical Details"),
+             p("")),
+    tabPanel("About", 
+             titlePanel("About"),
+             h3("Data Sources"),
+             p("I found three datasets in Harvard Dataverse that relate to my project topic: 
+               1) Air Quality Data, 2) COVID-19 Data, 3) Census Data"),
              p("All three datasets contain data collected in various cities in China."),
              p("You can access each of the datasets below."),
              a("China Air Quality Data", href = "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/XETLSS"),
+             br(),
              a("China COVID-19 Data", href = "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/MR5IJN"),
-             a("China Census Data", href = "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/GLKQME")),
-    tabPanel("About", 
-             titlePanel("About"),
-             p("For milestone #6, I decided to make an interative graphs of top 10 Chinese cities/provinces with highest COVID-19 deah rate. I filled with total COVID-19 cases to see whether cities with many total cases also have high death rates. Looking at the graphs, it does not seem like it. Also, using stan_glm, I made a fitted model between COVID-19 death rate and SO2 level in China. See the Model panel for details."),
-             h3("Url"),
-             a("Milestone #3", href = "https://github.com/scott9025/milestone3.git"),
-             p("Note that I'm using the previous repo for milestone #6")))
+             br(),
+             a("China Census Data", href = "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/GLKQME"),
+             h3("About Me"),
+             p("My name is Scott (Seung Woo) Bek and I am an MPP student at the Harvard Kennedy School."), 
+             p("You can reach me at: sbek@hks.harvard.edu"),
+             a("Github for this project", href = "https://github.com/scott9025/final-project")))
 
-# Define server logic required to draw a histogram
 server <- function(input, output) {
  
   output$death_plot <- renderPlot({
@@ -121,7 +174,8 @@ server <- function(input, output) {
     covid_aq %>%
       arrange(desc(death_rate)) %>%
       slice(1:10) %>% 
-      ggplot(aes(x = z,
+      ggplot(aes(x = fct_reorder(z,
+                                 death_rate),
                  y = death_rate,
                  fill = T_C_210114)) +
       geom_col() +
@@ -144,8 +198,8 @@ server <- function(input, output) {
   
   output$aq_plot <- renderPlot({
     
-    # Since we have 6 possible options, we want to use if, else if, and else,
-    # rather than ifelse, which is only useful for 2 options.
+    # Since there are 6 possible options, I use if, else if, and else, rather
+    # than ifelse, which is only useful for 2 options.
     
     if(input$var_plot2 == "co")
     {z <- covid_aq %>%
@@ -226,5 +280,4 @@ server <- function(input, output) {
   
 }
 
-# Run the application 
 shinyApp(ui = ui, server = server)
