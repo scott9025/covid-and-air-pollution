@@ -448,11 +448,9 @@ table_1 <- tbl_regression(fit_1,
   
   tab_source_note(md("Source: Harvard Dataverse"))
 
-# Let's comment out gtsave so that we don't accidently overwrite it when running
-# the code chunks.
+# Let's comment out saveRDS so that we don't accidently overwrite it.
 
-## table_1 %>%
-##  gtsave("table_1.html", path = "final-project/")
+## saveRDS(fit_1, file = "final-project/fit_1")
 
 ```
 
