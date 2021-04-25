@@ -1,9 +1,6 @@
 library(shiny)
 library(shinythemes)
 library(tidyverse)
-library(broom.mixed)
-library(gtsummary)
-library(gt)
 
 # It is a good idea to load packages that are absolutely necessary to run the
 # shiny app. Otherwise, running the app could take a long time.
@@ -126,7 +123,11 @@ ui <- navbarPage(
                It would have been ideal if I could control for all other variables that are correlated to both SO2 and COVID-19 death rate;
                however, due to limitation on data availability, I could only control for populations and sizes of cities."),
              br(),
-             gt_output("model"),
+             img(src = "table_1.png", height = "100%", width = "100%"),
+    
+             # For some reason, shiny app recognizes an image only if it's
+             # inside a folder called www.
+    
              br(),
              p("y_i"),
              p("Interpretation")
@@ -273,30 +274,6 @@ server <- function(input, output) {
            caption = "Source: Harvard Dataverse") +
       scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
       theme_bw()
-    
-  })
-  
-  output$model <- render_gt({
-    
-    fit_1 <- readRDS("clean/fit1")
-    
-    # I first loaded the previously created fit_1.
-    
-    tbl_regression(fit_1, 
-                   intercept = TRUE, 
-                   estimate_fun = function(x) style_sigfig(x, digits = 10)) %>%
-      
-      # Since the coefficients are relatively small, I used digits = 10.
-      
-      as_gt() %>% 
-      cols_label(estimate = md("**Parameter**")) %>%
-      tab_header(title = md("**COVID-19 Death Rate**"),
-                 subtitle = "How SO2, Population, and Land Area Predict COVID-19 Death Rates") %>% 
-      
-      # I want my tables or plots to stand alone. Therefore, adding descriptive
-      # titles is always a good idea!
-      
-      tab_source_note(md("Source: Harvard Dataverse"))
     
   })
   

@@ -450,6 +450,8 @@ table_1 <- tbl_regression(fit_1,
 
 # Let's comment out saveRDS so that we don't accidently overwrite it.
 
+gtsave(table_1, filename = "final-project/www/table_1.png")
+
 ## saveRDS(fit_1, file = "final-project/clean/fit1")
 
 ```
