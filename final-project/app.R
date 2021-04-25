@@ -3,7 +3,8 @@ library(shinythemes)
 library(tidyverse)
 
 # It is a good idea to load packages that are absolutely necessary to run the
-# shiny app. Otherwise, running the app could take a long time.
+# shiny app. Otherwise, running the app could take a long time or even cause an
+# error.
 
 covid_aq <- read_csv("clean/covid_aq.csv",
                      col_types =
@@ -145,13 +146,29 @@ ui <- navbarPage(
                city with average SO2 level of 10 micrograms per cubic meter (below the permissible level of 20 micrograms per cubic meter) is likely to have COVID-19 death rate of about 3.8%,
                whereas city with average SO2 level of 30 micrograms per cubic meter (above the permissible level) is likely to have COVID-19 death rate of about 7.7%.
                That is, the latter city is likely to have COVID-19 death rate that is more than double that of the former city."),
-             plotOutput("posterior")
+             h3("Different COVID-19 death rates for cities with different SO2 level"),
+             plotOutput("posterior"),
+             p("To explore further, I decided to calculate the expected values of the COVID-19 death rate of 5 cities with differnt SO2 level.
+               These expected values are based on the simple model above, and without making many bold assumptions, the results are not generalizable to other countries.
+               Before interpreting the distributions, remember that the permissible level of SO2 defined by WHO is 20 micrograms per cubic meter.
+               Therefore, the expected values come from 5 cities, 2 of which have the SO2 level below, 1 of which at, and 2 other of which above the permissible level."),
+             p("As expected, a city with SO2 of 40 micrograms per cubic meter had the highest expected COVID-19 death rate, centered at around 10%.
+               Because it is a distribution, not a fixed value, this value can range anywhere from 3% to 18%. 
+               It is, however, very unlikely that the expected value of COVID-19 death rate for this city is below 3% or above 18%.
+               Similar interpretations can apply to the remaining four cities.
+               Generally, the city with SO2 level of 0 had the lowest mean, and the city with SO2 level of 40 had the highest mean.
+               In terms of spread of the distribution, the city with SO2 level of 10 had the narrowest, and the city with SO2 level of 40 had the widest.
+               Given that most cities used to fit the simple model had SO2 level around 10 micrograms per cubic meter, 
+               it makes sense that the spread is the narrowest for the distribution of the city with SO2 level of 10 and that it gets wider as cities diverge from that SO2 level.")
              ),
     tabPanel("Technical Details",
              titlePanel("Technical Details"),
              p("Compare different fit models using loo_compare.
                To be done after the presentation.")),
     tabPanel("About", 
+             
+    # Here, I explain about my datasets and include contact information.         
+             
              titlePanel("About"),
              h3("Data Sources"),
              p("I found three datasets in Harvard Dataverse that relate to my project topic: 
@@ -201,7 +218,7 @@ server <- function(input, output) {
       geom_col() +
       coord_flip() +
       
-      # One way to add strings is using the paste() function. Notices paste()
+      # One way to add strings is using the paste() function. Notice how paste()
       # provides white spaces by default. If I don't want white spaces, I can
       # use paste0().
       
@@ -272,12 +289,20 @@ server <- function(input, output) {
     
     covid_aq %>% 
       filter(death_rate != 0) %>% 
+      
+      # To focus on cities with at least one death case, I filter for cities
+      # with non-zero death cases.
+      
       ggplot(aes(x = z,
                  y = death_rate)) +
       geom_point(na.rm = TRUE) +
       geom_smooth(method = "lm",
                   formula = y ~ x,
                   na.rm = TRUE) +
+      
+      # By including formula and na.rm, we can avoid getting unwanted messages.
+      # Messages and/or warnings are sometimes useful, but oftentimes annoying.
+      
       labs(title = paste("Correlation between COVID-19 death rate and", 
                          pollutant),
            subtitle = paste("Seems like there is a", 
@@ -288,6 +313,9 @@ server <- function(input, output) {
            y = "Death Rates",
            caption = "Source: Harvard Dataverse") +
       scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+      
+      # By setting accuracy equal to 1, I can get rid of any decimal points.
+      
       theme_bw()
     
   })
@@ -317,7 +345,7 @@ server <- function(input, output) {
       # I want both our x- and y-axis in percent format. Also, by setting
       # accuracy equal to 1, I can get rid of any decimal points.
       
-      labs(title = "Posterior Distribution of the Expected Value of the COVID-19 Death Rate",
+      labs(title = "Posterior Distributions of the Expected Value of the COVID-19 Death Rate",
            subtitle = "Cities with SO2 level above the permissible level (20) are likely to have COVID-19 death rates \nmore than twice as high COVID-19 death rates as cities with SO2 level below the permissible level",
            x = "COVID-19 Death Rate",
            y = NULL,

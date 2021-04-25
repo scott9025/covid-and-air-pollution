@@ -344,12 +344,20 @@ covid_aq %>%
 
 covid_aq %>% 
   filter(death_rate != 0) %>% 
+  
+  # To focus on cities with at least one death case, we filter for cities with
+  # non-zero death cases.
+  
   ggplot(aes(x = avg_co,
              y = death_rate)) +
   geom_point(na.rm = TRUE) +
   geom_smooth(method = "lm",
               formula = y ~ x,
               na.rm = TRUE) +
+  
+  # By including formula and na.rm, we can avoid getting unwanted messages.
+  # Messages and/or warnings are sometimes useful, but oftentimes annoying.
+  
   labs(title = "Correlation between COVID-19 death rate and CO",
        subtitle = "Seems like there is a weak correlation between the two",
        x = "Average CO",
