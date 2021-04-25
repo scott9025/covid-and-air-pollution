@@ -278,7 +278,7 @@ server <- function(input, output) {
   
   output$model <- render_gt({
     
-    fit_1 <- readRDS("fit1")
+    fit_1 <- readRDS("clean/fit1")
     
     # I first loaded the previously created fit_1.
     

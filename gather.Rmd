@@ -450,7 +450,7 @@ table_1 <- tbl_regression(fit_1,
 
 # Let's comment out saveRDS so that we don't accidently overwrite it.
 
-## saveRDS(fit_1, file = "final-project/fit1")
+## saveRDS(fit_1, file = "final-project/clean/fit1")
 
 ```
 
