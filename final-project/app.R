@@ -40,7 +40,7 @@ ui <- navbarPage(
     
     titlePanel("Background Information"),
              h3("15% of COVID-19 deaths worldwide could be attributed to air pollution"),
-             p("Both short- and long-term exposure to high levels of air pollution can cause a whole variety of adverse health outcomes. 
+             p("One study found that 15% of COVID-19 deaths are related to air pollution. Both short- and long-term exposure to high levels of air pollution can cause a whole variety of adverse health outcomes. 
                It could mean that residents - without knowing it - have pre-damaged lungs or blood vessels, a higher risk for a severe course of the disease."),
              p("Air pollution refers to the release of pollutants into the air that are detrimental to human health and the health of other animals. 
                The WHO estimates that around 7 million people die every year from exposure to polluted air. 
@@ -134,7 +134,10 @@ ui <- navbarPage(
              p("According to the regression results, COVID-19 death rate of a city with 0 micrograms per cubic meter of SO2, 
                and population and size of 0 is likely to be about 3.8%. 
                I am 95% confident that this value is between 1.3% and 6.2%.
-               Now, in reality, there is no such city, and thus the value of the (Intercept) is not particularly meaningful in this model."),
+               Now, in reality, there is no such city, and thus the value of the (Intercept) is not particularly meaningful in this model.
+               The cofficient of population and that of size tell me that on average, 
+               one unit increase in population/size is associated with -0.00000041%/0.205% increase in COVID-19 death rate. 
+               Given that the average value of population/size is 5,525,020 people/1.45 GIS, respectively, these two coefficients, again, are not particularly meaningful in this model."),
              p("The coefficient of SO2, however, is more meaningful; 
                on average, every 1 microgram per cubic meter increase is associated with about 0.2% increase in COVID-19 death rate, controlling for city population and city size.
                I am 95% confident that this value is between 0.0068% and 0.039%.
@@ -161,15 +164,12 @@ ui <- navbarPage(
                Given that most cities used to fit the simple model had SO2 level around 10 micrograms per cubic meter, 
                it makes sense that the spread is the narrowest for the distribution of the city with SO2 level of 10 and that it gets wider as cities diverge from that SO2 level.")
              ),
-    tabPanel("Technical Details",
-             titlePanel("Technical Details"),
-             p("Compare different fit models using loo_compare.
-               To be done after the presentation.")),
     tabPanel("About", 
              
     # Here, I explain about my datasets and include contact information.         
              
              titlePanel("About"),
+             p("For this project, I attempt to explore the relationship between COVID-19 death rate and air quality level in China."),
              h3("Data Sources"),
              p("I found three datasets in Harvard Dataverse that relate to my project topic: 
                1) Air Quality Data, 2) COVID-19 Data, 3) Census Data"),
